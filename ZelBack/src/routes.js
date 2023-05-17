@@ -425,6 +425,9 @@ module.exports = (app, expressWs) => {
   app.get('/syncthing/health', cache('30 seconds'), (req, res) => {
     syncthingService.getHealth(req, res);
   });
+  app.get('/syncthing/restID', cache('30 seconds'), (req, res) => {
+    syncthingService.getID(req, res);
+  });
   app.get('/syncthing/system/browse/:current?', cache('30 seconds'), (req, res) => {
     syncthingService.systemBrowse(req, res);
   });

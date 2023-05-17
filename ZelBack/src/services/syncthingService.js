@@ -111,6 +111,17 @@ async function getMeta(req, res) {
 }
 
 /**
+ * To get Syhcthing deviceID from Rest API
+ * @param {object} req Request.
+ * @param {object} res Response.
+ * @returns {object} System status including myID, {"myID": "K6VOO4G-5RLTF3B-JTUFMHH-JWITKGM-63DTTMT-I6BMON6-7E3LVFW-V5WAIAO"}.
+ */
+async function getID(req, res) {
+  const response = await performRequest('get', '/rest/system/status');
+  return res ? res.json(response) : response;
+}
+
+/**
  * To get Syhcthing health
  * @param {object} req Request.
  * @param {object} res Response.
@@ -1913,17 +1924,23 @@ async function getSvcReport(req, res) {
  */
 async function getDeviceID(req, res) {
   try {
-    const meta = await getMeta();
+    const syncthingID = await getID(); // get the device ID from REST status
     const healthy = await getHealth(); // check that syncthing instance is healthy
     const pingResponse = await systemPing(); // check that flux has proper api key
-    if (meta.status === 'success' && pingResponse.data.ping === 'pong' && healthy.data.status === 'OK') {
-      const adjustedString = meta.data.slice(15).slice(0, -2);
-      const deviceObject = JSON.parse(adjustedString);
-      const { deviceID } = deviceObject;
-      const successResponse = messageHelper.createDataMessage(deviceID);
-      return res ? res.json(successResponse) : successResponse;
+    if (syncthingID?.data?.myID === null || syncthingID?.data?.myID === undefined || syncthingID?.data?.myID === ''){
+      throw new Error('Syncthing Device ID not valid or undefined');
     }
-    throw new Error('Syncthing is not running properly');
+    if (pingResponse.data.ping !== 'pong'){
+      throw new Error('Syncthing ping response invalid');
+    }
+    if (healthy.data.status !== 'OK'){
+      throw new Error('Syncthing health response not OK');
+    }    
+    //const adjustedString = meta.data.slice(15).slice(0, -2);
+    const deviceObject = JSON.parse(syncthingID.data.myID);
+    const { deviceID } = deviceObject;
+    const successResponse = messageHelper.createDataMessage(deviceID);
+    return res ? res.json(successResponse) : successResponse;
   } catch (error) {
     log.error(error);
     const errorResponse = messageHelper.createErrorMessage(error.message, error.name, error.code);
@@ -2041,6 +2058,7 @@ module.exports = {
   getDeviceID,
   getMeta,
   getHealth,
+  getID,
   statsDevice,
   statsFolder,
   systemBrowse,
