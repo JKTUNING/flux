@@ -1928,7 +1928,7 @@ async function getDeviceID(req, res) {
     const healthy = await getHealth(); // check that syncthing instance is healthy
     const pingResponse = await systemPing(); // check that flux has proper api key
     if (syncthingID?.data?.myID === null || syncthingID?.data?.myID === undefined || syncthingID?.data?.myID === ''){
-      log.info('Syncthing Device ID not valid or undefined');
+      log.info('Syncthing Device id not valid or undefined');
       throw new Error('Syncthing is not running properly');
     }
     if (pingResponse.data.ping !== 'pong'){
@@ -1939,9 +1939,7 @@ async function getDeviceID(req, res) {
       log.info('Syncthing health response not OK');
       throw new Error('Syncthing is not running properly');
     }    
-    //const adjustedString = meta.data.slice(15).slice(0, -2);
-    const deviceObject = JSON.parse(syncthingID.data.myID);
-    const { deviceID } = deviceObject;
+    const deviceID = syncthingID.data.myID;
     const successResponse = messageHelper.createDataMessage(deviceID);
     return res ? res.json(successResponse) : successResponse;
   } catch (error) {
